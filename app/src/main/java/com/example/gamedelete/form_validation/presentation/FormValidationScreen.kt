@@ -1,5 +1,6 @@
 package com.example.gamedelete.form_validation.presentation
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,9 +18,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,12 +34,28 @@ import com.example.gamedelete.ui.theme.GameDeleteTheme
 fun FormValidationRoot(
     viewModel: FormValidationViewModel
 ) {
+
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+
+            when (event) {
+                is FormValidationEvent.Success -> {
+                    Toast.makeText(
+                        context,
+                        "Form submitted successfully!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+
+        }
+    }
+
     FormValidationScreen(
         viewModel.state,
-        viewModel::usernameChange,
-        viewModel::passwordChange,
-        viewModel::repeatedPasswordChange,
-        viewModel::termsAcceptedChange
+        viewModel::onAction,
     )
 }
 
@@ -44,10 +63,7 @@ fun FormValidationRoot(
 @Composable
 fun FormValidationScreen(
     state: FormValidationState,
-    onUserNameChange: (String) -> Unit,
-    onPasswordChange: (String) -> Unit,
-    onRepeatedPasswordChange: (String) -> Unit,
-    onTermsAccepted: (Boolean) -> Unit
+    onAction: (FormValidationAction) -> Unit
 ) {
 
     Column(
@@ -61,7 +77,7 @@ fun FormValidationScreen(
 
         OutlinedTextField(
             value = state.email,
-            onValueChange = onUserNameChange,
+            onValueChange = { onAction(FormValidationAction.EmailChange(it)) },
             label = { Text("Email") },
             singleLine = true,
             modifier = Modifier
@@ -78,7 +94,7 @@ fun FormValidationScreen(
 
         OutlinedTextField(
             value = state.password,
-            onValueChange = onPasswordChange,
+            onValueChange = { onAction(FormValidationAction.PasswordChange(it)) },
             label = { Text("Password") },
             visualTransformation = PasswordVisualTransformation(),
             singleLine = true,
@@ -102,7 +118,7 @@ fun FormValidationScreen(
 
         OutlinedTextField(
             value = state.repeatedPassword,
-            onValueChange = onRepeatedPasswordChange,
+            onValueChange = { onAction(FormValidationAction.RepeatedPasswordChange(it)) },
             label = { Text("Repeat Password") },
             visualTransformation = PasswordVisualTransformation(),
             singleLine = true,
@@ -130,26 +146,28 @@ fun FormValidationScreen(
 
             Checkbox(
                 checked = state.termsAccepted,
-                onCheckedChange = onTermsAccepted,
+                onCheckedChange = { onAction(FormValidationAction.TermsAcceptedChange(it)) },
 
                 )
 
             Text("Accept Terms", color = Color.Blue)
         }
 
-        state.termsAcceptedError?.let { Text(
-            text = it,
-            color = MaterialTheme.colorScheme.error
-        ) }
+        state.termsAcceptedError?.let {
+            Text(
+                text = it,
+                color = MaterialTheme.colorScheme.error
+            )
+        }
 
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.End
         ) {
 
-            Button(onClick = {}) {
-                Text("Submit")
-            }
+            Button(onClick = { onAction(FormValidationAction.Submit) }) {
+            Text("Submit")
+        }
         }
 
 
@@ -169,10 +187,7 @@ private fun FormValidationScreenPreview() {
                 repeatedPasswordError = "Passwords do not match",
                 termsAcceptedError = "Please accept the terms"
             ),
-            onUserNameChange = {},
-            onPasswordChange = {},
-            onTermsAccepted = {},
-            onRepeatedPasswordChange = {}
+            onAction = {}
         )
     }
 }

@@ -2,6 +2,10 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id ("kotlin-kapt")
+    id ("com.google.dagger.hilt.android")
+    alias(libs.plugins.jetbrainsKotlinSerialization)
+    id ("kotlin-parcelize")
 }
 
 android {
@@ -39,6 +43,16 @@ android {
     }
 }
 
+kapt {
+    correctErrorTypes = true
+}
+
+composeCompiler {
+    reportsDestination = layout.buildDirectory.dir("compose_compiler")
+    metricsDestination = layout.buildDirectory.dir("compose_compiler")
+    enableStrongSkippingMode = true
+}
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -49,8 +63,21 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+
+    //Navigation
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.kotlinx.serialization.json)
+
+    //Dagger Hilt
+    implementation ("com.google.dagger:hilt-android:2.51.1")
+    testImplementation(libs.junit.junit)
+    kapt ("com.google.dagger:hilt-compiler:2.51.1")
+    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
+
     testImplementation(libs.junit)
-    testImplementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3") // Use the latest version
+    testImplementation (libs.kotlinx.coroutines.test) // Use the latest version
+    testImplementation (libs.turbine)
+
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
